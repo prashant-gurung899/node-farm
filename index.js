@@ -1,55 +1,52 @@
 const fs = require('fs')
 const http = require('http')
+const path = require('path/posix')
 const url = require('url')
+
+const replaceTemplate = require('./modules/replaceTemplate')
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //SERVER
-const replaceTemplate = (temp, product)=>
-{
-    let output= temp.replace(/{%PRODUCTNAME%}/g,product.productName)
-    output=output.replace(/{%IMAGE%}/g,product.image)
-    output=output.replace(/{%PRICE%}/g,product.price)
-    output=output.replace(/{%FROM%}/g,product.from)
-    output=output.replace(/{%NUTRIENTS%}/g,product.nutrients)
-    output=output.replace(/{%QUANTITY%}/g,product.quantity)
-    output=output.replace(/{%DESCRIPTION%}/g,product.description)
-    output=output.replace(/{%ID%}/g,product.id)
 
 
-   if(!product.organice) output=output.replace(/{%NOT-ORGANICE%}/g,'not-organic')
-   return output
-}
+
+//reading file only once(sychronously)
 const tempOverview = fs.readFileSync(`${__dirname}/templates/template-overview.html`, 'utf-8')
 const tempCard = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'utf-8')
 const tempProduct = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8')
 
+//reading and parsing json data
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8')
 const dataObj = JSON.parse(data)
 
 let server = http.createServer((req, res) => {
-    const pathName = req.url;
+    //const pathName = req.url;
+
+    const { query, pathname } = url.parse(req.url, true)
     //FOR OVERVIEW
-    if (pathName === '/' || pathName === '/overview') {
+    if (pathname === '/' || pathname === '/overview') {
         res.writeHead(200, {
             'Content-type': 'text/html'
         })
         //loop
-        const cardshtml = dataObj.map(el => replaceTemplate(tempCard,el)).join('')
-        const output = tempOverview.replace('{%PRODUCT_CARDS%}',cardshtml)
-        console.log(output)
+        const cardshtml = dataObj.map(el => replaceTemplate(tempCard, el)).join('')
+        const output = tempOverview.replace('{%PRODUCT_CARDS%}', cardshtml)
+        res.end(output)
+        // console.log(output)
         //console.log(cardshtml)
         //res.end(tempOverview)
     }
     //FOR PRODUCT
-    else if (pathName === '/product') {
-
+    else if (pathname === '/product') {
         res.writeHead(200, {
             'Content-type': 'text/html'
         })
-        res.end(tempProduct)
+        const product = dataObj[query.id]
+        const output = replaceTemplate(tempProduct, product)
+        res.end(output)
     }
     //FOR API
-    else if (pathName === '/api') {
+    else if (pathname === '/api') {
         res.writeHead(200, {
             'Content-type': 'application/json'
         })
@@ -65,12 +62,14 @@ let server = http.createServer((req, res) => {
     }
 
 })
+
+//server listening
 server.listen(8000, '127.0.0.1', () => {
     console.log('server started')
 })
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//FILES
+//FILES practice
 
 //blocking or synchronous way
 /*let text= fs.readFileSync('./txt/input.txt','utf-8')
