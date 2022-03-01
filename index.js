@@ -1,79 +1,76 @@
-const fs = require('fs')
-const http = require('http')
-const path = require('path/posix')
-const url = require('url')
+const fs = require('fs');
+const http = require('http');
+const path = require('path/posix');
+const url = require('url');
 
-const slugify = require('slugify')
+const slugify = require('slugify');
 
-const replaceTemplate = require('./modules/replaceTemplate')
+const replaceTemplate = require('./modules/replaceTemplate');
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //SERVER
 
-
-
 //reading file only once(sychronously)
-const tempOverview = fs.readFileSync(`${__dirname}/templates/template-overview.html`, 'utf-8')
-const tempCard = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'utf-8')
-const tempProduct = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8')
+const tempOverview = fs.readFileSync(`${__dirname}/templates/template-overview.html`, 'utf-8');
+const tempCard = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'utf-8');
+const tempProduct = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8');
 
 //reading and parsing json data
-const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8')
-const dataObj = JSON.parse(data)
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
+const dataObj = JSON.parse(data);
 
 //slugify
 //console.log(slugify('FRESH AVOCADOS',{lower:true}))
-const slugs = dataObj.map(el => slugify(el.productName,{lower:true}))
-console.log(slugs)
+const slugs = dataObj.map((el) => slugify(el.productName, { lower: true }));
+console.log(slugs);
 
 let server = http.createServer((req, res) => {
-    //const pathName = req.url;
+  //const pathName = req.url;
 
-    const { query, pathname } = url.parse(req.url, true)
-    //FOR OVERVIEW
-    if (pathname === '/' || pathname === '/overview') {
-        res.writeHead(200, {
-            'Content-type': 'text/html'
-        })
-        //loop
-        const cardshtml = dataObj.map(el => replaceTemplate(tempCard, el)).join('')
-        const output = tempOverview.replace('{%PRODUCT_CARDS%}', cardshtml)
-        res.end(output)
-        // console.log(output)
-        //console.log(cardshtml)
-        //res.end(tempOverview)
-    }
-    //FOR PRODUCT
-    else if (pathname === '/product') {
-        res.writeHead(200, {
-            'Content-type': 'text/html'
-        })
-        const product = dataObj[query.id]
-        const output = replaceTemplate(tempProduct, product)
-        res.end(output)
-    }
-    //FOR API
-    else if (pathname === '/api') {
-        res.writeHead(200, {
-            'Content-type': 'application/json'
-        })
-        res.end(data)
-    }
-    //PAGE NOT FOUND
-    else {
-        res.writeHead(404, {
-            'Content-type': 'text/html',
-            'my-own-header': 'hello world'
-        })
-        res.end('<h1>page not found</h1>')
-    }
-
-})
+  const { query, pathname } = url.parse(req.url, true);
+  //FOR OVERVIEW
+  if (pathname === '/' || pathname === '/overview') {
+    res.writeHead(200, {
+      'Content-type': 'text/html',
+    });
+    //loop
+    const cardshtml = dataObj.map((el) => replaceTemplate(tempCard, el)).join('');
+    const output = tempOverview.replace('{%PRODUCT_CARDS%}', cardshtml);
+    res.end(output);
+    // console.log(output)
+    //console.log(cardshtml)
+    //res.end(tempOverview)
+  }
+  //FOR PRODUCT
+  else if (pathname === '/product') {
+    res.writeHead(200, {
+      'Content-type': 'text/html',
+    });
+    const product = dataObj[query.id];
+    const output = replaceTemplate(tempProduct, product);
+    res.end(output);
+  }
+  //FOR API
+  else if (pathname === '/api') {
+    res.writeHead(200, {
+      'Content-type': 'application/json',
+    });
+    res.end(data);
+  }
+  //PAGE NOT FOUND
+  else {
+    res.writeHead(404, {
+      'Content-type': 'text/html',
+      'my-own-header': 'hello world',
+    });
+    res.end('<h1>page not found</h1>');
+  }
+});
 
 //server listening
 server.listen(8000, '127.0.0.1', () => {
-    console.log('server started')
-})
+  console.log('server started');
+});
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //FILES practice
