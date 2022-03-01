@@ -3,6 +3,8 @@ const http = require('http')
 const path = require('path/posix')
 const url = require('url')
 
+const slugify = require('slugify')
+
 const replaceTemplate = require('./modules/replaceTemplate')
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,6 +20,11 @@ const tempProduct = fs.readFileSync(`${__dirname}/templates/template-product.htm
 //reading and parsing json data
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8')
 const dataObj = JSON.parse(data)
+
+//slugify
+//console.log(slugify('FRESH AVOCADOS',{lower:true}))
+const slugs = dataObj.map(el => slugify(el.productName,{lower:true}))
+console.log(slugs)
 
 let server = http.createServer((req, res) => {
     //const pathName = req.url;
